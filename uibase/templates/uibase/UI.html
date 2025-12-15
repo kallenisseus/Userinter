@@ -38,12 +38,7 @@
 
       <div class="form-group">
         <label for="category">Category</label>
-        <select id="category">
-          <option value="">Select category...</option>
-          <option value="Brakes">Brakes</option>
-          <option value="Engine">Engine</option>
-          <option value="Transmission">Transmission</option>
-        </select>
+        <input type="text" id="category" placeholder="Enter machine/category" />
       </div>
 
       <div class="form-group">
@@ -83,57 +78,58 @@
           </div>
 
           <!-- Category content -->
-          <div class="category-content">
+          <div class="category-content"  style="display: none">
             {% for subcat_name, subcat_obj in subcats.items %}
-              <div class="subcategory">
 
+
+              <div class="subcategory">
                 <!-- Subcategory header (default collapsed) -->
-                <div class="subcategory-header collapsed">
+                <div class="subcategory-header">
                   {{ subcat_name }}
                 </div>
 
-                <!-- Summary (hidden until subcategory expands) -->
-                {% if subcat_obj.summary %}
-                  <div class="summary-text">
-                    {{ subcat_obj.summary }}
-                  </div>
-                {% endif %}
-
-                <!-- Snippets list (hidden until subcategory expands; and list collapsible too) -->
-                {% if subcat_obj.windows %}
-                  <div class="snippets">
-
-                    <!-- Snippets header (default collapsed) -->
-                    <div class="snippets-header collapsed">
-                      Snippets ({{ subcat_obj.windows|length }})
+                <!-- NEW: Wrap both summary and snippets in one container -->
+                <div class="subcategory-content" style="display: none">
+                  
+                  <!-- Summary -->
+                  {% if subcat_obj.summary %}
+                    <div class="summary-text">
+                      {{ subcat_obj.summary }}
                     </div>
+                  {% endif %}
 
-                    <!-- Snippets content (snippets list) -->
-                    <div class="snippets-content">
-                      {% for w in subcat_obj.windows %}
-                        <!-- Each snippet stores enough info for JS to load transcript + highlight -->
-                        <div class="snippet-item"
-                             data-category="{{ category_name|escapejs }}"
-                             data-file="{{ w.source_file|escapejs }}"
-                             data-snippet="{{ w.text|escapejs }}">
+                  <!-- Snippets -->
+                  {% if subcat_obj.windows %}
+                    <div class="snippets">
+                      <div class="snippets-header">
+                        Snippets ({{ subcat_obj.windows|length }})
+                      </div>
+                      <div class="snippets-content" style="display: none">
+                        {% for w in subcat_obj.windows %}
+                          <!-- Each snippet stores enough info for JS to load transcript + highlight -->
+                          <div class="snippet-item"
+                              data-category="{{ category_name|escapejs }}"
+                              data-file="{{ w.source_file|escapejs }}"
+                              data-snippet="{{ w.text|escapejs }}">
 
-                          <div class="snippet-meta">
-                            {{ w.source_file }} • {{ w.author }} • {{ w.date }}
+                            <div class="snippet-meta">
+                              {{ w.source_file }} • {{ w.author }} • {{ w.date }}
+                            </div>
+
+                            <div class="snippet-text">{{ w.text }}</div>
+
+                            <!-- Placeholder "paths" – these are not real URLs yet -->
+                            <div class="snippet-links">
+                              <span class="path">Text: metadata → {{ category_name }}/{{ w.source_file }}</span>
+                              <span class="path">Audio: {{ w.source_file }}</span>
+                            </div>
                           </div>
-
-                          <div class="snippet-text">{{ w.text }}</div>
-
-                          <!-- Placeholder "paths" – these are not real URLs yet -->
-                          <div class="snippet-links">
-                            <span class="path">Text: metadata → {{ category_name }}/{{ w.source_file }}</span>
-                            <span class="path">Audio: {{ w.source_file }}</span>
-                          </div>
-                        </div>
-                      {% endfor %}
+                        {% endfor %}
+                      </div>
                     </div>
-                  </div>
-                {% endif %}
+                  {% endif %}
 
+                </div>
               </div>
             {% endfor %}
           </div>
@@ -215,26 +211,14 @@
       });
     }
 
-    // Category: toggles category-content
+    // Category toggles category-content
     bindCollapsible('.category-header', 'category-content');
 
-    // Snippets: toggles snippets-content (starts hidden via CSS)
+    // Subcategory toggles subcategory-content (which contains BOTH summary and snippets)
+    bindCollapsible('.subcategory-header', 'subcategory-content');
+
+    // Snippets header toggles snippets-content
     bindCollapsible('.snippets-header', 'snippets-content');
-
-    // Subcategory: MUST show/hide BOTH summary-text AND snippets block
-    // (Because your subcategory contains multiple blocks, not just the next sibling)
-    document.querySelectorAll('.subcategory-header').forEach(header => {
-      header.addEventListener('click', function () {
-        this.classList.toggle('collapsed');
-        const subcat = this.parentElement;
-
-        // Toggle summary and snippets
-        subcat.querySelectorAll(':scope > .summary-text, :scope > .snippets')
-          .forEach(el => {
-            el.style.display = (el.style.display === 'none') ? 'block' : 'none';
-          });
-      });
-    });
 
 
     /* ======================================================

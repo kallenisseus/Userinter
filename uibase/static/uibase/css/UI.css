@@ -180,11 +180,6 @@ body {
   transform: rotate(-90deg);
 }
 
-/* Subcategories start collapsed */
-.subcategory > .summary-text,
-.subcategory > .snippets {
-  display: none;
-}
 
 .summary-text {
   font-size: 13px;
