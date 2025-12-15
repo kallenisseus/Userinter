@@ -1,0 +1,354 @@
+/* =========================================================
+   GLOBAL RESET & BASE STYLES
+   ========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.container {
+  display: grid;
+  grid-template-columns: 250px 1fr 400px;
+  gap: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  height: calc(100vh - 40px);
+}
+
+
+/* =========================================================
+   LEFT PANEL – INPUT
+   ========================================================= */
+
+.input-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-panel h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.submit-btn {
+  background: #4caf50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.submit-btn:hover {
+  background: #45a049;
+}
+
+.processing-status {
+  display: none;
+  padding: 10px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.reload-btn {
+  margin-top: auto;
+  padding: 10px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.reload-btn:hover {
+  background: #0b7dda;
+}
+
+
+/* =========================================================
+   MIDDLE PANEL – KNOWLEDGE TREE
+   ========================================================= */
+
+.output-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+
+/* ---------- CATEGORY ---------- */
+
+.category {
+  margin-bottom: 20px;
+}
+
+.category-header {
+  font-weight: bold;
+  font-size: 16px;
+  padding: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-header::before {
+  content: "▼ ";
+  transition: transform 0.3s;
+}
+
+.category-header.collapsed::before {
+  transform: rotate(-90deg);
+}
+
+
+/* ---------- SUBCATEGORY ---------- */
+
+.subcategory {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+.subcategory-header {
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px;
+  background: #f8f8f8;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.subcategory-header::before {
+  content: "▼ ";
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.subcategory-header.collapsed::before {
+  transform: rotate(-90deg);
+}
+
+/* Subcategories start collapsed */
+.subcategory > .summary-text,
+.subcategory > .snippets {
+  display: none;
+}
+
+.summary-text {
+  font-size: 13px;
+  color: #444;
+  font-style: italic;
+  margin: 8px 0;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+
+/* ---------- SNIPPETS (3rd LEVEL) ---------- */
+
+.snippets {
+  margin-left: 20px;
+  margin-top: 8px;
+}
+
+.snippets-header {
+  font-weight: bold;
+  font-size: 13px;
+  padding: 6px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.snippets-header::before {
+  content: "▼ ";
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.snippets-header.collapsed::before {
+  transform: rotate(-90deg);
+}
+
+/* Snippets start collapsed */
+.snippets-content {
+  display: none;
+  margin-top: 6px;
+}
+
+
+/* ---------- SNIPPET ITEM ---------- */
+
+.snippet-item {
+  padding: 10px;
+  background: #fafafa;
+  border-left: 3px solid #999;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+
+.snippet-item:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+.snippet-item.selected {
+  border-left-color: #2196f3;
+  background: #f0f7ff;
+}
+
+.snippet-meta {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.snippet-text {
+  font-size: 13px;
+  color: #333;
+}
+
+.snippet-links .path {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+
+/* =========================================================
+   RIGHT PANEL – TRANSCRIPT
+   ========================================================= */
+
+.text-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.text-panel h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.about-section {
+  margin-bottom: 20px;
+}
+
+.about-label {
+  font-weight: bold;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.about-content {
+  font-size: 14px;
+}
+
+.transcript-content {
+  line-height: 1.6;
+  font-size: 14px;
+  color: #333;
+  white-space: pre-wrap; /* preserve transcript line breaks */
+}
+
+
+/* ---------- HIGHLIGHT ---------- */
+
+mark.hl {
+  padding: 2px 3px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   SMALL TEXT / HINTS
+   ========================================================= */
+
+.hint-text {
+  color: #888;
+  font-size: 13px;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .input-panel,
+  .output-panel,
+  .text-panel {
+    min-height: 300px;
+  }
+}

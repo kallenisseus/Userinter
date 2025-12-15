@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ======================================================
+       HEAD / STYLES
+       ====================================================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Base</title>
+
+  <!-- Static CSS (Django) -->
+  <link rel="stylesheet" href="{% static 'uibase/css/UI.css' %}">
+</head>
+
+<body>
+  <!-- ======================================================
+       MAIN 3-COLUMN LAYOUT
+       ====================================================== -->
+  <div class="container">
+
+    <!-- ======================================================
+         LEFT PANEL — INPUT (upload, category, author)
+         NOTE: This is UI-only for now. No form submit to backend yet.
+         ====================================================== -->
+    <div class="input-panel">
+      <h2>Input Audiofile</h2>
+
+      <div class="form-group">
+        <label for="audioFile">Upload Audio</label>
+        <input type="file" id="audioFile" accept="audio/*" />
+      </div>
+
+      <div class="form-group">
+        <label for="audioFileName">Audio file</label>
+        <input type="text" id="audioFileName" placeholder="Auto-filled" />
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category">
+          <option value="">Select category...</option>
+          <option value="Brakes">Brakes</option>
+          <option value="Engine">Engine</option>
+          <option value="Transmission">Transmission</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="authorName">Your Name</label>
+        <input type="text" id="authorName" placeholder="Enter your name" />
+      </div>
+
+      <button class="submit-btn" type="button">Submit</button>
+
+      <!-- Fake status indicator (demo only) -->
+      <div class="processing-status" id="processingStatus">
+        Processing... DONE!
+      </div>
+
+      <button class="reload-btn" type="button">Reload output</button>
+    </div>
+
+
+    <!-- ======================================================
+         MIDDLE PANEL — OUTPUT TREE
+         Structure:
+           Category (collapsible)
+             Subcategory (collapsible, default CLOSED)
+               Summary
+               Snippets (collapsible, default CLOSED)
+                 Snippet items (click => show transcript on right panel)
+         ====================================================== -->
+    <div class="output-panel">
+      <input type="text" class="search-bar" placeholder="Search..." />
+
+      {% for category_name, subcats in kb.items %}
+        <div class="category">
+
+          <!-- Category header (click toggles entire category-content) -->
+          <div class="category-header">
+            {{ category_name }}
+          </div>
+
+          <!-- Category content -->
+          <div class="category-content">
+            {% for subcat_name, subcat_obj in subcats.items %}
+              <div class="subcategory">
+
+                <!-- Subcategory header (default collapsed) -->
+                <div class="subcategory-header collapsed">
+                  {{ subcat_name }}
+                </div>
+
+                <!-- Summary (hidden until subcategory expands) -->
+                {% if subcat_obj.summary %}
+                  <div class="summary-text">
+                    {{ subcat_obj.summary }}
+                  </div>
+                {% endif %}
+
+                <!-- Snippets list (hidden until subcategory expands; and list collapsible too) -->
+                {% if subcat_obj.windows %}
+                  <div class="snippets">
+
+                    <!-- Snippets header (default collapsed) -->
+                    <div class="snippets-header collapsed">
+                      Snippets ({{ subcat_obj.windows|length }})
+                    </div>
+
+                    <!-- Snippets content (snippets list) -->
+                    <div class="snippets-content">
+                      {% for w in subcat_obj.windows %}
+                        <!-- Each snippet stores enough info for JS to load transcript + highlight -->
+                        <div class="snippet-item"
+                             data-category="{{ category_name|escapejs }}"
+                             data-file="{{ w.source_file|escapejs }}"
+                             data-snippet="{{ w.text|escapejs }}">
+
+                          <div class="snippet-meta">
+                            {{ w.source_file }} • {{ w.author }} • {{ w.date }}
+                          </div>
+
+                          <div class="snippet-text">{{ w.text }}</div>
+
+                          <!-- Placeholder "paths" – these are not real URLs yet -->
+                          <div class="snippet-links">
+                            <span class="path">Text: metadata → {{ category_name }}/{{ w.source_file }}</span>
+                            <span class="path">Audio: {{ w.source_file }}</span>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <p class="hint-text">Text segments from file</p>
+    </div>
+
+
+    <!-- ======================================================
+         RIGHT PANEL — TRANSCRIPT VIEWER
+         Shows transcript for clicked snippet + highlights snippet text.
+         ====================================================== -->
+    <div class="text-panel">
+      <h2>About</h2>
+
+      <div class="about-section">
+        <div class="about-label">Audiofile© name, Date</div>
+        <div class="about-content" id="aboutContent">
+          Click a snippet to load transcript
+        </div>
+      </div>
+
+      <!-- Transcript container (JS injects transcript HTML here) -->
+      <div class="transcript-content" id="transcriptContent">
+        <p>Full transcript will appear here…</p>
+      </div>
+    </div>
+
+  </div> <!-- /container -->
+
+
+  <!-- ======================================================
+       EMBED METADATA JSON INTO PAGE (SAFE)
+       This allows JS to look up full transcript text by:
+         META[category_name][source_file].transcription.text
+       ====================================================== -->
+  {{ meta|json_script:"kb-meta" }}
+
+
+  <script>
+    /* ======================================================
+       LEFT PANEL HELPERS (UI only)
+       ====================================================== */
+
+    // Auto-fill filename when file is selected
+    document.getElementById('audioFile').addEventListener('change', function (e) {
+      const fileName = e.target.files[0]?.name || '';
+      document.getElementById('audioFileName').value = fileName;
+    });
+
+    // Demo-only submit button functionality
+    document.querySelector('.submit-btn').addEventListener('click', function () {
+      const status = document.getElementById('processingStatus');
+      status.style.display = 'block';
+      status.textContent = 'Processing...';
+      setTimeout(() => {
+        status.textContent = 'Processing... DONE!';
+      }, 2000);
+    });
+
+
+    /* ======================================================
+       COLLAPSIBLE HELPERS
+       ====================================================== */
+
+    // Generic helper: toggles the next sibling element if it has a certain class
+    function bindCollapsible(selector, contentClass) {
+      document.querySelectorAll(selector).forEach(header => {
+        header.addEventListener('click', function () {
+          this.classList.toggle('collapsed');
+          const content = this.nextElementSibling;
+
+          if (content && (!contentClass || content.classList.contains(contentClass))) {
+            content.style.display = (content.style.display === 'none') ? 'block' : 'none';
+          }
+        });
+      });
+    }
+
+    // Category: toggles category-content
+    bindCollapsible('.category-header', 'category-content');
+
+    // Snippets: toggles snippets-content (starts hidden via CSS)
+    bindCollapsible('.snippets-header', 'snippets-content');
+
+    // Subcategory: MUST show/hide BOTH summary-text AND snippets block
+    // (Because your subcategory contains multiple blocks, not just the next sibling)
+    document.querySelectorAll('.subcategory-header').forEach(header => {
+      header.addEventListener('click', function () {
+        this.classList.toggle('collapsed');
+        const subcat = this.parentElement;
+
+        // Toggle summary and snippets
+        subcat.querySelectorAll(':scope > .summary-text, :scope > .snippets')
+          .forEach(el => {
+            el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+          });
+      });
+    });
+
+
+    /* ======================================================
+       TRANSCRIPT LOADER + HIGHLIGHT
+       ====================================================== */
+
+    // Metadata embedded by Django json_script
+    const META = JSON.parse(document.getElementById("kb-meta").textContent);
+
+    // Escape user content so we can safely insert into innerHTML
+    function escapeHtml(str) {
+      return (str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // Normalize whitespace to increase match chance
+    function normalizeForSearch(s) {
+      return (s || "").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+
+    // Highlight snippet inside transcript (best-effort)
+    function highlightAndFormat(fullText, snippet) {
+      if (!fullText) return "<p></p>";
+
+      // Try exact match first (case-insensitive) using original text indices
+      const fullLower = fullText.toLowerCase();
+      const snipLower = (snippet || "").toLowerCase();
+      const idx = fullLower.indexOf(snipLower);
+
+      // Exact match found => highlight exact region
+      if (idx !== -1 && snippet) {
+        const before = escapeHtml(fullText.slice(0, idx));
+        const match  = escapeHtml(fullText.slice(idx, idx + snippet.length));
+        const after  = escapeHtml(fullText.slice(idx + snippet.length));
+        return `${before}<mark class="hl">${match}</mark>${after}`;
+      }
+
+      // No exact match => attempt normalized match (fallback)
+      const nFull = normalizeForSearch(fullText);
+      const nSnip = normalizeForSearch(snippet);
+
+      if (snippet && nSnip && nFull.includes(nSnip)) {
+        return `<div class="hint-text">Snippet highlighted approximately:</div>
+                <mark class="hl">${escapeHtml(snippet)}</mark>
+                <hr/>
+                ${escapeHtml(fullText)}`;
+      }
+
+      // If nothing matches, just render transcript + message
+      return `${escapeHtml(fullText)}
+              <p class="hint-text">Snippet not found in transcript.</p>`;
+    }
+
+    // Click snippet => load transcript in right panel and highlight snippet
+    document.querySelectorAll(".snippet-item").forEach(el => {
+      el.addEventListener("click", () => {
+
+        // UI: mark selected snippet
+        document.querySelectorAll(".snippet-item.selected")
+          .forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+
+        // Read data from HTML attributes
+        const category = el.dataset.category;
+        const file = el.dataset.file;
+        const snippet = el.dataset.snippet;
+
+        // Look up transcript in metadata
+        const entry = META?.[category]?.[file];
+        const transcript = entry?.transcription?.text || "";
+
+        // Update "About"
+        const author = entry?.author || "";
+        const date = entry?.date || "";
+        document.getElementById("aboutContent").textContent =
+          `${file}${author ? " - " + author : ""}${date ? ", " + date : ""}`;
+
+        // Inject transcript + highlight
+        document.getElementById("transcriptContent").innerHTML =
+          highlightAndFormat(transcript, snippet);
+
+        // Scroll highlight into view if exists
+        const mark = document.querySelector("#transcriptContent mark.hl");
+        if (mark) mark.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+
+  </script>
+</body>
+</html>
