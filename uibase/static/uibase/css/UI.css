@@ -172,15 +172,39 @@ body{
   font-size: 13px;
 }
 
-.summary-text{
-  margin: 8px 0 10px 0;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #444;
-  font-style: italic;
+/* Make these more specific to override the old style */
+.subcategory-content .summary-text {
+  margin: 0; /* Reset the old margin */
+  padding: 0; /* Reset the old padding */
+  border: none; /* Remove the old border */
+  border-radius: 0;
+  font-size: inherit; /* Inherit from parent */
+  color: inherit;
+  font-style: normal; /* Remove italic */
 }
+
+.subcategory-content .summary-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 8px 13px !important;
+  margin-bottom: 1px !important;
+  border-radius: 4px !important;
+  font-weight: bold !important;
+}
+
+.subcategory-content .summary-header .icon {
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.subcategory-content .summary-content {
+  padding: 5px;
+  border-radius: 4px;
+  
+}
+
 
 .snippets{ margin-left: 14px; margin-top: 8px; }
 .snippets-header{
@@ -301,6 +325,25 @@ body{
 .transcript-content{
   font-size: 14px;
   color: #333;
+}
+/* Make transcript scrollable, keep rest fixed */
+.transcript-scroll-container {
+  height: 400px; /* Fixed height */
+  overflow-y: auto; /* Makes it scrollable */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 20px;
+  background: white;
+}
+
+/* Optional: Style the transcript content inside */
+.transcript-content {
+  padding: 15px;
+}
+
+/* When transcript has content, remove the placeholder style */
+.transcript-content:not(:empty) p:first-child {
+  display: none;
 }
 
 /* Segment rows (timestamped transcript) */

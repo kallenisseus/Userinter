@@ -94,7 +94,13 @@
                   <!-- Summary -->
                   {% if subcat_obj.summary %}
                     <div class="summary-text">
-                      {{ subcat_obj.summary }}
+                      <div class="summary-header">
+                        <span>Attention: This is an AI Summary</span>
+                        <span class="icon">!</span>
+                      </div>
+                      <div class="summary-content">
+                        {{ subcat_obj.summary }}
+                      </div>
                     </div>
                   {% endif %}
 
@@ -120,7 +126,7 @@
 
                             <!-- Placeholder "paths" – these are not real URLs yet -->
                             <div class="snippet-links">
-                              <span class="path">Text: metadata → {{ category_name }}/{{ w.source_file }}</span>
+                              <span </span>
                                 <a href="#"
                                   class="audio-link"
                                   data-category="{{ category_name|escapejs }}"
@@ -156,32 +162,31 @@
          RIGHT PANEL — TRANSCRIPT VIEWER
          Shows transcript for clicked snippet + highlights snippet text.
          ====================================================== -->
-    <div class="text-panel">
-      <h2>About</h2>
+<div class="text-panel" style="height: 100vh; display: flex; flex-direction: column;">
+  <h2>About</h2>
 
-      <div class="about-section">
-        <div class="about-label">Audiofile© name, Date</div>
-        <div class="about-content" id="aboutContent">
-          Click a snippet to load transcript
-        </div>
-      </div>
-
-      <div class="audio-player">
-        <div class="about-label">Audio</div>
-        <audio id="audioPlayer" controls preload="metadata" style="width: 100%;">
-          Your browser does not support the audio element.
-        </audio>
-        <div class="audio-time" id="audioTime"></div>
-      </div>
-
-
-      <!-- Transcript container (JS injects transcript HTML here) -->
-      <div class="transcript-content" id="transcriptContent">
-        <p>Full transcript will appear here…</p>
-      </div>
+  <div class="about-section">
+    <div class="about-label"></div>
+    <div class="about-content" id="aboutContent">
+      Click a snippet to load transcript
     </div>
+  </div>
 
-  </div> <!-- /container -->
+  <div class="audio-player">
+    <div class="about-label">Audio</div>
+    <audio id="audioPlayer" controls preload="metadata" style="width: 100%;">
+      Your browser does not support the audio element.
+    </audio>
+    <div class="audio-time" id="audioTime"></div>
+  </div>
+
+  <!-- Transcript takes remaining space and scrolls internally -->
+  <div class="transcript-scroll-container" style="flex: 1; overflow-y: auto; border: 1px solid #ddd; margin-top: 15px;">
+    <div class="transcript-content" id="transcriptContent">
+      <p>Full transcript will appear here…</p>
+    </div>
+  </div>
+</div>
 
 
   <!-- ======================================================
@@ -407,8 +412,10 @@
       // About
       const author = entry?.author || "";
       const date = entry?.date || "";
-      document.getElementById("aboutContent").textContent =
-        `${file}${author ? " - " + author : ""}${date ? ", " + date : ""}`;
+      document.getElementById("aboutContent").innerHTML =
+        `Filename: ${file}<br>
+        Author: ${author ? author : ""}<br>
+        Date: ${date ? date : ""}`;
 
       // Audio
       setAudioSource(file);
